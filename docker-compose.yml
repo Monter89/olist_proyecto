@@ -1,0 +1,33 @@
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: olist_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: olist_user
+      POSTGRES_PASSWORD: olist_pass
+      POSTGRES_DB: olist_analytics
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: olist_metabase
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_FILE: /metabase.db
+
+  adminer:
+    image: adminer
+    container_name: olist_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
