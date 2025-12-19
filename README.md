@@ -36,17 +36,16 @@ El proyecto fue realizado en el marco del **Bootcamp de Data Analytics 2025**.
 
 ## 🧱 Arquitectura del proyecto
 
-```
-Olist Source Data
-        ↓
-ETL & Data Cleaning (Python)
-        ↓
-PostgreSQL (OLTP / Staging)
-        ↓
-Data Warehouse (Modelo Analítico)
-        ↓
-Metabase (Dashboards)
-```
+## 🧱 Arquitectura del proyecto
+
+<p align="center">
+  <img src="assets/arquitectura_olist.png" alt="Arquitectura del proyecto Olist" width="900">
+</p>
+
+<p align="center">
+  <em>Arquitectura end-to-end del proyecto: ingesta, transformación, almacenamiento y visualización.</em>
+</p>
+
 
 ---
 
@@ -142,3 +141,4 @@ Bootcamp de Data Analytics – 2025
 ---
 
 ⭐ *Este proyecto demuestra cómo un enfoque analítico bien diseñado puede transformar datos en valor para el negocio.*
+
