@@ -6,7 +6,25 @@
 -- -------------------------
 -- Schema
 -- -------------------------
+-- =====================================================
+-- DIMENSIÓN: ZIP CODES
+-- Grain: 1 row = 1 zip code prefix
+-- =====================================================
+
 CREATE SCHEMA IF NOT EXISTS analytics;
+
+DROP VIEW IF EXISTS analytics.dim_zip_codes CASCADE;
+
+CREATE OR REPLACE VIEW analytics.dim_zip_codes AS
+SELECT
+    geolocation_zip_code_prefix                          AS zip_code_prefix,
+    ROUND(AVG(geolocation_lat)::numeric, 6)             AS avg_lat,
+    ROUND(AVG(geolocation_lng)::numeric, 6)             AS avg_lng,
+    MODE() WITHIN GROUP (ORDER BY geolocation_city)     AS city,
+    MODE() WITHIN GROUP (ORDER BY geolocation_state)    AS state,
+    COUNT(*)                                            AS total_locations
+FROM geolocation_clean
+GROUP BY geolocation_zip_code_prefix;
 
 -- -------------------------
 -- Dimension: Time
@@ -73,6 +91,18 @@ SELECT
     order_delivered_customer_date,
     order_estimated_delivery_date
 FROM orders_clean;
+
+-- -------------------------
+-- Dimension: Payment
+-- Grain: 1 row = 1 order
+-- -------------------------
+CREATE OR REPLACE VIEW analytics.dim_payment AS
+SELECT
+    order_id,
+    STRING_AGG(DISTINCT payment_type, ', ') AS payment_type,
+    MAX(payment_installments)               AS payment_installments
+FROM payments_clean
+GROUP BY order_id;
 
 -- -------------------------
 -- Fact: Order Items

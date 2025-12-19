@@ -1,157 +1,144 @@
-# 📊 Proyecto Olist – Data Analytics 
+# 📊 Proyecto Olist – Data Analytics
 
-## 🧠 Descripción general
-Este proyecto trabaja sobre el **dataset real de e-commerce brasileño Olist**, con un enfoque práctico de **Data Engineering + Analytics**.
+## 📌 Descripción general
 
-El objetivo es:
-- limpiar y preparar datos reales (con errores e inconsistencias),
-- cargarlos en PostgreSQL,
-- construir un **modelo analítico tipo estrella**,
-- y dejar métricas listas para visualización en BI (Metabase).
+Este proyecto consiste en el desarrollo de una **solución de análisis de datos end-to-end** a partir de un dataset real de e‑commerce (Olist – Brasil). El objetivo principal es transformar datos transaccionales en información analítica útil para la **toma de decisiones de negocio**, aplicando procesos de ETL, modelado dimensional y visualización mediante dashboards.
 
-El proyecto está pensado como un **trabajo colaborativo**, donde la capa de datos y la capa de BI están bien separadas.
+El proyecto fue realizado en el marco del **Bootcamp de Data Analytics 2025**.
+
+---
+
+## 🎯 Objetivos del proyecto
+
+* Realizar la **ingesta, limpieza y transformación** de datos reales de e‑commerce.
+* Persistir los datos en una **base de datos relacional (PostgreSQL)**.
+* Diseñar un **Data Warehouse** con modelo dimensional (esquema estrella).
+* Construir métricas e indicadores clave de negocio.
+* Visualizar los resultados mediante **dashboards interactivos en Metabase**.
+
+---
+
+## 🗂️ Dataset utilizado
+
+* **Fuente:** Olist (dataset público de e‑commerce brasileño)
+* **Período:** 2016 – 2018
+* **Contenido:**
+
+  * Órdenes de venta
+  * Clientes y vendedores
+  * Productos y categorías
+  * Pagos
+  * Envíos y tiempos de entrega
+  * Opiniones de clientes
+* **Volumen:** Más de 100.000 pedidos históricos
 
 ---
 
 ## 🧱 Arquitectura del proyecto
 
-CSV (raw)
-↓
-ETL en Python (Pandas)
-↓
-PostgreSQL (tablas *_clean)
-↓
-Schema analytics (views: dims + fact)
-↓
-Métricas SQL
-↓
-Metabase / BI
-
-
----
-
-## 🔄 ETL – Limpieza de datos
-
-El pipeline ETL está implementado en **Python + Pandas** (`etl/clean_pipeline.py`).
-
-### Principales decisiones de limpieza:
-- Eliminación de duplicados por clave lógica.
-- Conversión explícita de tipos.
-- Normalización de textos (encoding, mayúsculas/minúsculas).
-- Validación de valores numéricos (no negativos).
-- **Corrección de fechas inválidas** (ej: `32/13/2020`) en lugar de descartar filas.
-- Separación clara entre datos **raw** y **clean**.
-
-👉 El objetivo no es “embellecer” datos, sino **hacerlos utilizables y defendibles**.
+```
+Olist Source Data
+        ↓
+ETL & Data Cleaning (Python)
+        ↓
+PostgreSQL (OLTP / Staging)
+        ↓
+Data Warehouse (Modelo Analítico)
+        ↓
+Metabase (Dashboards)
+```
 
 ---
 
-## 🗄️ Base de datos – PostgreSQL
+## 🧹 Procesos de limpieza y transformación (ETL)
 
-Los datos limpios se cargan en PostgreSQL como tablas `*_clean`.
+Durante el proceso de ETL se aplicaron las siguientes transformaciones:
 
-Ejemplos:
-- `orders_clean`
-- `order_items_clean`
-- `customers_clean`
-- `products_clean`
-- `sellers_clean`
+* 🗑 Deduplicación de registros
+* 📅 Normalización y validación de fechas
+* 🧹 Tratamiento de valores nulos
+* 📐 Normalización de strings
+* ✅ Imputación de valores faltantes (moda)
+* 📊 Detección y control de valores atípicos
+* 🔗 Validación de integridad entre tablas
 
-No se forzaron **FKs ni índices** por decisión de diseño (dataset moderado y foco en modelado).
-
----
-
-## ⭐ Modelo analítico (Schema `analytics`)
-
-Se construyó un **modelo estrella** usando **VIEWS** (no tablas físicas).
-
-### 📌 Dimensiones
-- `analytics.dim_time`
-- `analytics.dim_customer`
-- `analytics.dim_product`
-- `analytics.dim_seller`
-- `analytics.dim_order`
-
-### 📌 Tabla de hechos
-- `analytics.fact_order_items`
-
-**Grano de la fact**  
-> 1 fila = 1 ítem vendido dentro de una orden
-
-Las vistas están definidas en:
-
-sql/analytics_model.sql
-
-Esto permite:
-- reproducibilidad,
-- flexibilidad,
-- y no modificar datos base.
+Estas transformaciones permitieron mejorar la calidad de los datos y garantizar métricas consistentes para el análisis.
 
 ---
 
-## ⚠️ Nota importante sobre el dataset
-El dataset Olist contiene **inconsistencias reales**:
-- existen `order_items` sin `order` asociada.
+## 🧠 Modelo analítico
 
-Decisión tomada:
-- la **fact view usa INNER JOIN**, excluyendo registros huérfanos,
-- no se borran datos base,
-- la decisión queda documentada y es reversible.
+El Data Warehouse fue diseñado utilizando un **esquema estrella**, compuesto por:
 
----
+### 🔹 Tabla de hechos
 
-## 📊 Métricas finales
+* **fact_order_items**
 
-Las métricas están definidas en:
+  * Grain: 1 fila = 1 ítem vendido
+  * Métricas: precio, costo de envío, valor total por ítem
 
+### 🔹 Dimensiones
 
-sql/metrics_final.sql
+* **dim_time** – análisis temporal
+* **dim_product** – productos y categorías
+* **dim_customer** – clientes
+* **dim_seller** – vendedores
+* **dim_order** – estado y fechas de órdenes
+* **dim_payment** – medio de pago
+* **dim_zip_codes** – información geográfica
 
-
-Incluyen:
-1. Revenue mensual
-2. Cantidad de órdenes por mes
-3. Revenue por categoría
-4. Revenue por estado del cliente
-5. Ticket promedio
-6. Tiempo promedio de entrega
-7. Top productos por revenue
-8. Top vendedores por revenue
-
-Todas se basan en:
-
-
-analytics.fact_order_items + dimensiones
-
+Este modelo permite analizar el negocio desde múltiples perspectivas de forma eficiente.
 
 ---
 
-## 📈 Metabase / BI
+## 📊 Dashboards y métricas
 
-La visualización se realiza en **Metabase**.
+Los dashboards desarrollados en Metabase permiten responder preguntas clave como:
 
-📌 Recomendaciones:
-- Usar `analytics.fact_order_items` como tabla base.
-- Cruces mediante dimensiones.
-- No usar tablas `*_clean` directamente para dashboards.
+* ¿Cuál es el ingreso total generado?
+* ¿Cuántas órdenes se realizaron?
+* ¿Cuál es el ticket promedio por orden?
+* ¿Cuál es el costo promedio de envío?
+* ¿Qué porcentaje de órdenes se completan exitosamente?
+* ¿Cómo evolucionan los ingresos y las órdenes en el tiempo?
+* ¿Qué categorías generan mayor revenue?
+* ¿En qué regiones se concentra la actividad comercial?
 
-Más detalles en `METABASE.md`.
+Los dashboards están organizados en:
 
----
-
-## 🧠 Objetivo del proyecto
-Este proyecto busca demostrar:
-- criterio técnico,
-- separación de responsabilidades,
-- modelado analítico correcto,
-- y trabajo colaborativo real.
-
-No está orientado solo a visualizaciones, sino a **calidad de datos y diseño**.
+* KPIs generales
+* Tendencias temporales
+* Segmentación
+* Rankings
 
 ---
 
-## 👥 Trabajo en equipo
-- **ETL + modelo analítico:** este repositorio
-- **BI / dashboards:** Metabase
+## 🛠️ Tecnologías utilizadas
 
-El proyecto queda abierto a revisión y mejoras.
+* **Python** (ETL y limpieza de datos)
+* **Pandas / NumPy**
+* **PostgreSQL**
+* **Docker & Docker Compose**
+* **Metabase**
+* **SQL**
+
+---
+
+## 🚀 Oportunidades de mejora
+
+* Escalabilidad del procesamiento con **Apache Spark**
+* Migración del Data Warehouse a la **nube** (BigQuery, Redshift, Synapse)
+* Automatización de pipelines con **Apache Airflow**
+* Integración de nuevas fuentes de datos
+
+---
+
+## 🧾 Autor
+
+**Gaston Montero**
+**Rodrigo Buccicardi**
+Bootcamp de Data Analytics – 2025
+
+---
+
+⭐ *Este proyecto demuestra cómo un enfoque analítico bien diseñado puede transformar datos en valor para el negocio.*
